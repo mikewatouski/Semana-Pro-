@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SemanaPro+</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-bar">
+    <h1 class="title">Semana Pro+</h1>
+    <button id="lockBtn" class="icon-btn" title="Bloquear" aria-label="Bloquear">🔒</button>
+  </header>
+
+  <main id="view"></main>
+
+  <!-- SETUP -->
+  <template id="tpl-setup">
+    <section class="screen">
+      <h2>Configurar Semana Pro</h2>
+      <form id="setupForm" class="form">
+        <label>Ingresa tu nombre
+          <input required name="name" placeholder="Ingresa tu nombre">
+        </label>
+        <!-- NO tema (lo sacamos) -->
+        <label>Crea tu pin
+          <input required name="pin" placeholder="••••" pattern="\d{4,6}" inputmode="numeric">
+          <small>4 a 6 dígitos</small>
+        </label>
+        <label>Confirma tu pin
+          <input required name="pin2" placeholder="••••" pattern="\d{4,6}" inputmode="numeric">
+        </label>
+        <div class="footer-cta">
+          <button class="btn primary wide" type="submit">Guardar y continuar</button>
+        </div>
+      </form>
+    </section>
+  </template>
+
+  <!-- LOGIN -->
+  <template id="tpl-login">
+    <section class="screen">
+      <h2>Semana Pro+</h2>
+      <p class="subtitle">Bienvenido a semana pro</p>
+      <form id="loginForm" class="form">
+        <label>Ingrese su pin
+          <input required name="pin" placeholder="••••" pattern="\d{4,6}" inputmode="numeric">
+        </label>
+        <div class="footer-cta">
+          <button class="btn primary wide" type="submit">Entrar</button>
+        </div>
+        <p id="loginError" class="error hide">PIN incorrecto<br><span class="muted">Intente Nuevamente</span></p>
+        <p id="cooldownMsg" class="info hide"></p>
+      </form>
+    </section>
+  </template>
+
+  <!-- APP -->
+  <template id="tpl-app">
+    <section class="screen">
+      <nav class="tabs">
+        <button data-tab="tareas" class="tab active">Tareas</button>
+        <button data-tab="habitos" class="tab">Habitos</button>
+        <button data-tab="resumen" class="tab">Resumen</button>
+      </nav>
+
+      <!-- TAREAS -->
+      <section id="tab-tareas" class="tab-panel active">
+        <div class="cols">
+          <div class="col"><h3>Por hacer</h3><div id="todo" class="list"></div></div>
+          <div class="col"><h3>En curso</h3><div id="doing" class="list"></div></div>
+          <div class="col"><h3>Hecho</h3><div id="done" class="list"></div></div>
+        </div>
+        <div class="footer-cta">
+          <button id="addTaskBtn" class="btn primary wide">Agregar tarea</button>
+        </div>
+      </section>
+
+      <!-- HÁBITOS -->
+      <section id="tab-habitos" class="tab-panel">
+        <div class="habits-header">
+          <h3>Habitos</h3>
+          <!-- el nombre del hábito se ve en cada tarjeta -->
+        </div>
+        <div id="habitsContainer" class="habits"></div>
+        <div class="footer-cta">
+          <button id="addHabitBtn" class="btn primary wide">Agregar habito</button>
+        </div>
+      </section>
+
+      <!-- RESUMEN -->
+      <section id="tab-resumen" class="tab-panel">
+        <div class="cards">
+          <div class="card"><h4>Tareas completadas</h4><p id="statTasks">0</p></div>
+          <div class="card"><h4>Días de hábitos cumplidos</h4><p id="statHabits">0</p></div>
+        </div>
+        <button id="exportBtn" class="btn secondary">Exportar semana (PNG)</button>
+      </section>
+    </section>
+  </template>
+
+  <!-- export PNG -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
