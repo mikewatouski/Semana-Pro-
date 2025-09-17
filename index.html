@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="es">
 <head>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SemanaPro+</title>
@@ -65,16 +66,22 @@
       </nav>
 
       <!-- TAREAS -->
-      <section id="tab-tareas" class="tab-panel active">
-        <div class="cols">
-          <div class="col"><h3>Por hacer</h3><div id="todo" class="list"></div></div>
-          <div class="col"><h3>En curso</h3><div id="doing" class="list"></div></div>
-          <div class="col"><h3>Hecho</h3><div id="done" class="list"></div></div>
-        </div>
-        <div class="footer-cta">
-          <button id="addTaskBtn" class="btn primary wide">Agregar tarea</button>
-        </div>
-      </section>
+<section id="tab-tareas" class="tab-panel active">
+  <!-- conmutador de estado -->
+  <div class="seg" id="taskSeg">
+    <button data-s="todo"  class="seg-btn active">Por hacer</button>
+    <button data-s="doing" class="seg-btn">En curso</button>
+    <button data-s="done"  class="seg-btn">Hecho</button>
+  </div>
+
+  <!-- lista única que cambia según la pestaña -->
+  <div id="taskList" class="list"></div>
+
+  <div class="footer-cta">
+    <button id="addTaskBtn" class="btn primary wide">Agregar tarea</button>
+  </div>
+</section>
+
 
       <!-- HÁBITOS -->
       <section id="tab-habitos" class="tab-panel">

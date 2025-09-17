@@ -38,6 +38,7 @@ function lock(){ go("#/login"); }
 
 /* setup */
 function renderSetup(){
+  
   const tpl = $("#tpl-setup").content.cloneNode(true);
   const form = tpl.querySelector("#setupForm");
   form.addEventListener("submit", async (e) => {
@@ -118,12 +119,23 @@ function renderApp(){
     });
   });
 
-  // TAREAS
-  const lists = { todo: $("#todo"), doing: $("#doing"), done: $("#done") };
-  const tasks = load(STORAGE_KEYS.TASKS, []);
-  function paintTasks(){
-    Object.values(lists).forEach(el => el.innerHTML = "");
-    for(const t of tasks){
+  // --------- TAREAS (lista única por estado) ----------
+const taskList = $("#taskList");
+const seg = $("#taskSeg");
+let currentStatus = "todo"; // pestaña activa: 'todo' | 'doing' | 'done'
+
+const tasks = load(STORAGE_KEYS.TASKS, []);
+
+function paintTasks(){
+  taskList.innerHTML = "";
+  const filtered = tasks.filter(t => t.status === currentStatus);
+  if(filtered.length === 0){
+    const empty = document.createElement("div");
+    empty.className = "card";
+    empty.textContent = "Sin tareas en esta sección.";
+    taskList.appendChild(empty);
+  }else{
+    for(const t of filtered){
       const el = document.createElement("div");
       el.className = "task";
       el.innerHTML = `
@@ -132,33 +144,62 @@ function renderApp(){
           <button class="mini" data-act="move">Mover</button>
           <button class="mini" data-act="edit">Renombrar</button>
           <button class="mini" data-act="del">Eliminar</button>
-        </div>`;
+        </div>
+      `;
+      // acciones
       el.querySelector('[data-act="move"]').addEventListener("click", () => {
         const opt = prompt("Mover a:\n1) Por hacer\n2) En curso\n3) Hecho");
         const map = { "1":"todo", "2":"doing", "3":"done" };
-        if(map[opt]){ t.status = map[opt]; save(STORAGE_KEYS.TASKS, tasks); paintTasks(); }
+        if(map[opt]){
+          t.status = map[opt];
+          save(STORAGE_KEYS.TASKS, tasks);
+          paintTasks();
+          updateStats();
+        }
       });
       el.querySelector('[data-act="edit"]').addEventListener("click", () => {
         const nt = prompt("Nuevo título:", t.title);
-        if(nt && nt.trim()){ t.title = nt.trim(); save(STORAGE_KEYS.TASKS, tasks); paintTasks(); }
+        if(nt && nt.trim()){
+          t.title = nt.trim();
+          save(STORAGE_KEYS.TASKS, tasks);
+          paintTasks();
+        }
       });
       el.querySelector('[data-act="del"]').addEventListener("click", () => {
         if(confirm("¿Eliminar tarea?")){
           const idx = tasks.findIndex(x => x.id === t.id);
-          tasks.splice(idx,1); save(STORAGE_KEYS.TASKS, tasks); paintTasks();
+          tasks.splice(idx,1);
+          save(STORAGE_KEYS.TASKS, tasks);
+          paintTasks();
+          updateStats();
         }
       });
-      lists[t.status].appendChild(el);
+      taskList.appendChild(el);
     }
-    updateStats();
   }
-  paintTasks();
-  $("#addTaskBtn").addEventListener("click", () => {
-    const title = prompt("Nueva tarea:");
-    if(!title) return;
-    tasks.push({ id: Date.now(), title: title.trim(), status: "todo" });
-    save(STORAGE_KEYS.TASKS, tasks); paintTasks();
+  updateStats();
+}
+paintTasks();
+
+// cambiar pestaña de estado
+$$(".seg-btn", seg).forEach(btn => {
+  btn.addEventListener("click", () => {
+    $$(".seg-btn", seg).forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentStatus = btn.dataset.s; // 'todo' | 'doing' | 'done'
+    paintTasks();
   });
+});
+
+// agregar tarea: cae por defecto en la pestaña activa
+$("#addTaskBtn").addEventListener("click", () => {
+  const title = prompt("Nueva tarea:");
+  if(!title) return;
+  tasks.push({ id: Date.now(), title: title.trim(), status: currentStatus });
+  save(STORAGE_KEYS.TASKS, tasks);
+  paintTasks();
+});
+
 
   // HÁBITOS
   const habitsContainer = $("#habitsContainer");
@@ -166,34 +207,57 @@ function renderApp(){
   const days = ["L","M","M","J","V","S","D"];
 
   function paintHabits(){
-    habitsContainer.innerHTML = "";
-    habits.forEach((h) => {
-      const card = document.createElement("div");
-      card.className = "habit";
-      const row = document.createElement("div");
-      row.className = "row";
-      const name = document.createElement("div");
-      name.className = "name"; name.textContent = h.name;
-      const daysWrap = document.createElement("div");
-      daysWrap.className = "days";
-      h.week.forEach((val, i) => {
-        const d = document.createElement("button");
-        d.type="button";
-        d.className = "day" + (val === true ? " on" : val === false ? " off" : "");
-        d.textContent = days[i];
-        d.addEventListener("click", () => {
-          // vacío -> ✅ -> ❌ -> vacío
-          h.week[i] = (h.week[i] === null) ? true : (h.week[i] === true ? false : null);
-          save(STORAGE_KEYS.HABITS, habits); paintHabits(); updateStats();
-        });
-        daysWrap.appendChild(d);
-      });
-      row.append(name, daysWrap);
-      card.append(row);
-      habitsContainer.appendChild(card);
+  const daysLetters = ["L","M","M","J","V","S","D"];
+  habitsContainer.innerHTML = "";
+
+  habits.forEach((h) => {
+    const card = document.createElement("div");
+    card.className = "habit";
+
+    // fila superior: solo el nombre a la derecha (como tu mockup)
+    const row = document.createElement("div");
+    row.className = "row";
+    const spacer = document.createElement("div"); // vacío a la izquierda
+    const name = document.createElement("div");
+    name.className = "name";
+    name.textContent = h.name || "Hábito";
+    row.append(spacer, name);
+
+    // fila de letras L M M J V S D
+    const labels = document.createElement("div");
+    labels.className = "labels";
+    daysLetters.forEach(l => {
+      const lab = document.createElement("div");
+      lab.className = "label";
+      lab.textContent = l;
+      labels.appendChild(lab);
     });
-  }
-  paintHabits();
+
+    // línea divisoria
+    const divider = document.createElement("div");
+    divider.className = "divider";
+
+    // fila de cajitas clickeables (sin letras dentro)
+    const daysWrap = document.createElement("div");
+    daysWrap.className = "days";
+    h.week.forEach((val, i) => {
+      const d = document.createElement("button");
+      d.type = "button";
+      d.className = "day" + (val === true ? " on" : val === false ? " off" : "");
+      // ciclo: vacío -> ✓ -> ✕ -> vacío
+      d.addEventListener("click", () => {
+        h.week[i] = (h.week[i] === null) ? true : (h.week[i] === true ? false : null);
+        save(STORAGE_KEYS.HABITS, habits);
+        paintHabits();
+        updateStats();
+      });
+      daysWrap.appendChild(d);
+    });
+
+    card.append(row, labels, divider, daysWrap);
+    habitsContainer.appendChild(card);
+  });
+}
 
   $("#addHabitBtn").addEventListener("click", () => {
     const name = prompt("Nombre del hábito:");
