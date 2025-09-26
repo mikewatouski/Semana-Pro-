@@ -154,12 +154,53 @@ input {
 .task .mini{ font-size:12px; padding:6px 8px; border:1px solid #ddd; border-radius:6px; background:#f8f8f8; cursor:pointer; }
 
 
-/* --- HÁBITOS (estilo Figma) --- */
+/* === HÁBITOS (reemplazar bloque) === */
 .habits{ display:grid; gap:12px; margin-top:12px; }
-.habit{ border:1px solid #ddd; border-radius:8px; padding:12px; }
+.habits-header h3{ margin:8px 0; font-size:18px; }
+
+.habit{ border:1px solid #ddd; border-radius:8px; padding:12px; background:#fff; }
 
 .habit .row{ display:flex; align-items:center; justify-content:space-between; }
 .habit .name{ font-weight:600; font-size:18px; }
+
+/* fila de letras L M M J V S D */
+.labels{
+  display:grid;
+  grid-template-columns:repeat(7, 34px);
+  gap:6px;
+  margin:12px 0 6px;
+}
+.label{
+  text-align:center;
+  font-size:20px;    /* como tu Figma */
+  line-height:1;
+}
+
+/* línea divisoria */
+.divider{ border-top:1px solid #ddd; margin:6px 0 10px; }
+
+/* fila de cajitas seleccionables */
+.days{
+  display:grid;
+  grid-template-columns:repeat(7, 34px);
+  gap:6px;
+}
+.day{
+  width:34px; height:34px;
+  border:1px solid #ccc;
+  border-radius:6px;
+  background:#fafafa;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+}
+
+/* sin texto por defecto; la marca se dibuja con ::after */
+.day::after{ content:""; font-size:18px; font-weight:700; line-height:1; }
+.day.on{  background:#e6f6ec; border-color:#27AE60; }
+.day.on::after{ content:"✓"; color:#27AE60; }
+.day.off{ background:#fdecea; border-color:#EB5757; }
+.day.off::after{ content:"✕"; color:#666; }
+
 
 /* fila de letras L M M J V S D */
 .labels{

@@ -202,28 +202,34 @@ $("#addTaskBtn").addEventListener("click", () => {
 
 
   // HÁBITOS
-  const habitsContainer = $("#habitsContainer");
-  const habits = load(STORAGE_KEYS.HABITS, []);
-  const days = ["L","M","M","J","V","S","D"];
+  // === HÁBITOS (reemplazar bloque) ===
+const habitsContainer = $("#habitsContainer");
 
-  function paintHabits(){
+// clave por usuario si existe uid(); sino, único
+function HABITS_KEY(){
+  const id = (typeof uid === "function" && uid()) ? uid() : "default";
+  return `sp_habits_${id}`;
+}
+
+function paintHabits(){
   const daysLetters = ["L","M","M","J","V","S","D"];
+  const habits = load(HABITS_KEY(), []);          // SIEMPRE fresco
   habitsContainer.innerHTML = "";
 
   habits.forEach((h) => {
     const card = document.createElement("div");
     card.className = "habit";
 
-    // fila superior: solo el nombre a la derecha (como tu mockup)
+    // fila superior (nombre a la derecha como tu Figma)
     const row = document.createElement("div");
     row.className = "row";
-    const spacer = document.createElement("div"); // vacío a la izquierda
+    const spacer = document.createElement("div");
     const name = document.createElement("div");
     name.className = "name";
     name.textContent = h.name || "Hábito";
     row.append(spacer, name);
 
-    // fila de letras L M M J V S D
+    // letras L M M J V S D
     const labels = document.createElement("div");
     labels.className = "labels";
     daysLetters.forEach(l => {
@@ -233,23 +239,24 @@ $("#addTaskBtn").addEventListener("click", () => {
       labels.appendChild(lab);
     });
 
-    // línea divisoria
     const divider = document.createElement("div");
     divider.className = "divider";
 
-    // fila de cajitas clickeables (sin letras dentro)
+    // cajitas clickeables (vacío → ✓ → ✕ → vacío)
     const daysWrap = document.createElement("div");
     daysWrap.className = "days";
     h.week.forEach((val, i) => {
       const d = document.createElement("button");
       d.type = "button";
       d.className = "day" + (val === true ? " on" : val === false ? " off" : "");
-      // ciclo: vacío -> ✓ -> ✕ -> vacío
       d.addEventListener("click", () => {
-        h.week[i] = (h.week[i] === null) ? true : (h.week[i] === true ? false : null);
-        save(STORAGE_KEYS.HABITS, habits);
+        const fresh = load(HABITS_KEY(), []);
+        const idx = fresh.findIndex(x => x.id === h.id);
+        const curr = fresh[idx].week[i];
+        fresh[idx].week[i] = (curr === null) ? true : (curr === true ? false : null);
+        save(HABITS_KEY(), fresh);
         paintHabits();
-        updateStats();
+        if (typeof updateStats === "function") updateStats();
       });
       daysWrap.appendChild(d);
     });
@@ -259,12 +266,20 @@ $("#addTaskBtn").addEventListener("click", () => {
   });
 }
 
-  $("#addHabitBtn").addEventListener("click", () => {
-    const name = prompt("Nombre del hábito:");
-    if(!name) return;
-    habits.push({ id: Date.now(), name: name.trim(), week: [null,null,null,null,null,null,null] });
-    save(STORAGE_KEYS.HABITS, habits); paintHabits();
-  });
+// agregar hábito
+$("#addHabitBtn").addEventListener("click", () => {
+  const name = prompt("Nombre del hábito:");
+  if(!name) return;
+  const fresh = load(HABITS_KEY(), []);
+  fresh.push({ id: Date.now(), name: name.trim(), week: [null,null,null,null,null,null,null] });
+  save(HABITS_KEY(), fresh);
+  paintHabits();
+  if (typeof updateStats === "function") updateStats();
+});
+
+// pintar al entrar al dashboard
+paintHabits();
+
 
   // RESUMEN + EXPORT
   function updateStats(){
